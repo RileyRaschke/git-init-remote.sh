@@ -41,10 +41,10 @@ echo $remoteCmd
 
 if [ ! -z "$repoName" ]
 then
-  echo "Trying to init ssh://${scmHost}${repo}"
+  echo "Trying to init ssh://${scmHost}/${repo}"
   ssh $scmHost "${remoteCmd}"
 
-  echo "Cloning from: ssh://${scmHost}${repo}"
+  echo "Cloning from: ssh://${scmHost}/${repo}"
   echo " into: ${repo}"
   test -d "${repoPath}" && { test -d "${repo}" || hg clone "ssh://${scmHost}/${repo}" "${repo}" ; }
 else
