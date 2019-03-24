@@ -2,6 +2,7 @@
 
 DEFAULT_HOST='scm'
 DEFAULT_BASE="/var/hg/$USER"
+DEFAULT_REMOTE_EXT=''
 DEFAULT_REMOTE_ENV='/some/env/file' # probably needs full path... maybe has home context.. maybe not.
 
 # user config
@@ -14,6 +15,7 @@ test -f "$rc" && . "$rc"
 scmHost="${scmHost:-$DEFAULT_HOST}"
 repoBase="${repoBase:-$DEFAULT_BASE}"
 remoteEnvFile="${remoteEnvFile:-$DEFAULT_REMOTE_ENV}"
+remoteExt="${remoteExt:-$DEFAULT_REMOTE_EXT}"
 
 ##
 # No configuration? Here's what i'll do on STDERR...
@@ -30,6 +32,7 @@ then
 scmHost=${scmHost}
 repoBase=${repoBase}
 remoteEnvFile=${remoteEnvFile}
+remoteExt=${remoteExt} # I leave blank for mercurial!
 HG_INIT_REMOTE_CONFIGED=1
 ##" >&2
 fi
@@ -37,20 +40,22 @@ fi
 repoPath=$(echo "${repoBase}/$1" | sed "s/\/$(basename "$1")\$//")
 repoName=$(basename "$1")
 repo="${repoPath}/${repoName}"
+remoteRepo="${repo}${remoteExt}"
 
 echo "Resolved config:"
 echo -e "\tscmHost=$scmHost"
 echo -e "\trepoBase=$repoBase"
 echo -e "\trepoName=$repoName"
 echo -e "\trepoPath=$repoPath"
+echo -e "\tremoteRepo=$remoteRepo"
 echo -e "\trepo=$repo\n"
 
 remoteCmd=$(echo -e "/bin/bash -c \
    \"test -r '${remoteEnvFile}' && . '${remoteEnvFile}' ; \
-  test -d '${repo}' && { echo 'WARN: Remote repo: ${repo} already exists!' >&2 ; exit 1; } \
+  test -d '${remoteRepo}' && { echo 'WARN: Remote repo: ${remoteRepo} already exists!' >&2 ; exit 1; } \
   || test -d '${repoPath}' \
-  || { mkdir -p '${repoPath}' && hg init '${repo}' ; } \
-  && { test  -d '${repo}' || hg init '${repo}' ; }\" "\
+  || { mkdir -p '${repoPath}' && hg init '${remoteRepo}' ; } \
+  && { test  -d '${remoteRepo}' || hg init '${remoteRepo}' ; }\" "\
 )
 #echo -e "$remoteCmd"
 

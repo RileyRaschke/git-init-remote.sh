@@ -2,6 +2,7 @@
 
 DEFAULT_HOST='scm'
 DEFAULT_BASE="/var/git/$USER"
+DEFAULT_REMOTE_EXT='.git'
 DEFAULT_REMOTE_ENV='/some/env/file' # probably needs full path... maybe has home context.. maybe not.
 
 # user config
@@ -14,6 +15,7 @@ test -f "$rc" && . "$rc"
 scmHost="${scmHost:-$DEFAULT_HOST}"
 repoBase="${repoBase:-$DEFAULT_BASE}"
 remoteEnvFile="${remoteEnvFile:-$DEFAULT_REMOTE_ENV}"
+remoteExt="${remoteExt:-$DEFAULT_REMOTE_EXT}"
 
 ##
 # No configuration? Here's what i'll do on STDERR...
@@ -30,6 +32,8 @@ then
 scmHost=${scmHost}
 repoBase=${repoBase}
 remoteEnvFile=${remoteEnvFile}
+remoteExt=${remoteExt}
+continueOnError=1 #leave null to die after remote errors occur
 GIT_INIT_REMOTE_CONFIGED=1
 ##" >&2
 fi
@@ -37,20 +41,22 @@ fi
 repoPath=$(echo "${repoBase}/$1" | sed "s/\/$(basename "$1")\$//")
 repoName=$(basename "$1")
 repo="${repoPath}/${repoName}"
+remoteRepo="${repo}${remoteExt}"
 
 echo "Resolved config:"
 echo -e "\tscmHost=$scmHost"
 echo -e "\trepoBase=$repoBase"
 echo -e "\trepoName=$repoName"
 echo -e "\trepoPath=$repoPath"
+echo -e "\tremoteRepo=$remoteRepo"
 echo -e "\trepo=$repo\n"
 
 remoteCmd=$(echo -e "/bin/bash -c \
    \"test -r '${remoteEnvFile}' && . '${remoteEnvFile}' ; \
-  test -d '${repo}.git' && { echo 'WARN: Remote repo: ${repo}.git already exists!' >&2 ; exit 1; } \
+  test -d '${remoteRepo}' && { echo 'WARN: Remote repo: ${remoteRepo} already exists!' >&2 ; exit 1; } \
   || test -d '${repoPath}' \
-  || { mkdir -p '${repoPath}' && git init --bare '${repo}.git' ; } \
-  && { test  -d '${repo}.git' || git init --bare '${repo}.git' ; }\" "\
+  || { mkdir -p '${repoPath}' && git init --bare '${remoteRepo}' ; } \
+  && { test  -d '${remoteRepo}' || git init --bare '${remoteRepo}' ; }\" "\
 )
 #echo -e "$remoteCmd"
 
