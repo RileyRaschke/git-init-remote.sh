@@ -66,6 +66,6 @@ then
     && { test -d "${repo}" || hg clone "ssh://${scmHost}/${repo}" "${repo}" ; }
 
 else
-  echo -e "^^ I didn't run! ^^\nUsage: $0 repositoryName"
+  echo -e "Usage: $0 repositoryName\n"
 fi
 

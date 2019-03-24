@@ -66,6 +66,6 @@ then
     && { test -d "${repo}" || git clone "ssh://${scmHost}${repo}.git" "${repo}" ; }
 
 else
-  echo -e "^^ I didn't run! ^^\nUsage: $0 repositoryName"
+  echo -e "Usage: $0 repositoryName\n"
 fi
 
