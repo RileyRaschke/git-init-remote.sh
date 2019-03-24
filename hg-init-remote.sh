@@ -1,6 +1,6 @@
 #!/bin/bash
 
-test -e $(which hg) || { echo "No git executable found on your path, please install git!" >&2 ; exit 1; }
+test -e $(which hg) || { echo "No hg executable found on your path, please install mercurial!" >&2 ; exit 1; }
 
 DEFAULT_HOST='scm'
 DEFAULT_BASE="/var/hg/$USER"
