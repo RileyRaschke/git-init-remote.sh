@@ -1,5 +1,7 @@
 #!/bin/bash
 
+test -e $(which git) || { echo "No git executable found on your path, please install git!" >&2 ; exit 1; }
+
 DEFAULT_HOST='scm'
 DEFAULT_BASE="/var/git/$USER"
 DEFAULT_REMOTE_EXT='.git'
