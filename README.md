@@ -1,9 +1,6 @@
-This is a readme file.
+# git-init-remote.sh
 
-```javascript
+Simplify new repository creation on your favorite remote server, and clone to local while you're at it!
 
-const Lib = require('SomeJsLib')
+Run `./git-init-remote.sh` without any options to read about configuration and usage!
 
-```
-
-Will that be a snipped! ^
