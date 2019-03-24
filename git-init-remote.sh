@@ -4,14 +4,21 @@ DEFAULT_HOST='scm'
 DEFAULT_BASE="/var/git/$USER"
 DEFAULT_REMOTE_ENV='/site/etc/siterc'
 
+# user config
 rc=~/.git-init-remote.sh.rc
 
+# load it if theyy got it
 test -f "$rc" && . "$rc"
 
+# Or default...
 scmHost="${scmHost:-$DEFAULT_HOST}"
 repoBase="${repoBase:-$DEFAULT_BASE}"
 remoteEnvFile="${remoteEnvFile:-$DEFAULT_REMOTE_ENV}"
 
+##
+# No configuration? Here's wheat i'll do on STDERR
+# (write it for you!)
+##
 if [ -z "$GIT_INIT_REMOTE_CONFIGED" ]
 then
   echo "##" >&2
@@ -34,20 +41,21 @@ repo="${repoPath}/${repoName}"
 echo "scmHost=$scmHost"
 echo "repoBase=$repoBase"
 echo "repoName=$repoName"
-echo "repoPath=$repo"
+echo "repoPath=$repoPath"
+echo "repo=$repo"
+
+remoteCmd=$(echo "/bin/bash . $remoteEnvFile ; test -d \"${repoPath}\" || mkdir -p "${repoPath}" && { test -d \"${repo}.git\" || git init --bare \"${repo}.git\"; }")
+echo $remoteCmd
 
 if [ ! -z "$repoName" ]
 then
-  remoteCmd=$(echo "/bin/bash . $remoteEnvFile ; test -d \"${repoPath}\" && { test -d \"${repo}.git\" || git init --bare \"${repo}.git\"; }")
-
-  echo $remoteCmd
 
   echo "Trying to init ssh://${scmHost}${repo}.git"
   ssh $scmHost "${remoteCmd}"
 
   echo "Cloning from: ssh://${scmHost}${repo}.git"
   echo " into: ${repo}"
-  test -d "${repoPath}" && { test -d "${repo}" || git clone "ssh://${scmHost}${repo}.git" "${repo}" ; }
+  test -d "${repoPath}" || mkdir -p "${repoPath}" && { test -d "${repo}" || git clone "ssh://${scmHost}${repo}.git" "${repo}" ; }
 
 else
 
