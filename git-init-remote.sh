@@ -38,28 +38,31 @@ repoPath=$(echo "${repoBase}/$1" | sed "s/\/$(basename "$1")\$//")
 repoName=$(basename "$1")
 repo="${repoPath}/${repoName}"
 
-echo "scmHost=$scmHost"
-echo "repoBase=$repoBase"
-echo "repoName=$repoName"
-echo "repoPath=$repoPath"
-echo "repo=$repo"
+echo "Resolved config:"
+echo -e "\tscmHost=$scmHost"
+echo -e "\trepoBase=$repoBase"
+echo -e "\trepoName=$repoName"
+echo -e "\trepoPath=$repoPath"
+echo -e "\trepo=$repo\n"
 
-remoteCmd=$(echo "/bin/bash \
-  test -f "${remoteEnvFile}" && . "${remoteEnvFile}" ; \
-  test -d "${repoPath}" \
-  || mkdir -p "${repoPath}" \
-  && { test -d \"${repo}.git\" || git init --bare \"${repo}.git\"; }" \
+remoteCmd=$(echo -e "/bin/bash -c \
+   \"test -r '${remoteEnvFile}' && . '${remoteEnvFile}' ; \
+  test -d '${repo}.git' && { echo 'WARN: Remote repo: ${repo}.git already exists!' >&2 ; exit 1; } \
+  || test -d '${repoPath}' \
+  || { mkdir -p '${repoPath}' && git init --bare '${repo}.git' ; } \
+  && { test  -d '${repo}.git' || git init --bare '${repo}.git' ; }\" "\
 )
-echo $remoteCmd
+#echo -e "$remoteCmd"
 
 if [ ! -z "$repoName" ]
 then
-  echo "Trying to init ssh://${scmHost}${repo}.git"
-  ssh $scmHost "${remoteCmd}"
+  echo "Trying to initialize: ssh://${scmHost}${repo}.git"
+  ssh $scmHost "${remoteCmd}" || { test -z "${continueOnError}" && { echo "Errors Occured... Exiting." >&2 ; exit 1; } ; }
 
-  echo "Cloning from: ssh://${scmHost}${repo}.git"
-  echo " into: ${repo}"
-  test -d "${repoPath}" || mkdir -p "${repoPath}" \
+  test -d "$repo" && { echo "WARN: Local repostiory already exists! $repo" >&2 ; exit 1; } \
+    || echo "Trying clone from: ssh://${scmHost}${repo}.git" \
+    && echo "in to: ${repo}"  \
+    && test -d "${repoPath}" || mkdir -p "${repoPath}" \
     && { test -d "${repo}" || git clone "ssh://${scmHost}${repo}.git" "${repo}" ; }
 
 else

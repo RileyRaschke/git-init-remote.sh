@@ -2,7 +2,7 @@
 
 DEFAULT_HOST='scm'
 DEFAULT_BASE="/var/hg/$USER"
-DEFAULT_REMOTE_ENV='/site/etc/siterc'
+DEFAULT_REMOTE_ENV='/some/env/file' # probably needs full path... maybe has home context.. maybe not.
 
 # user config
 rc=~/.hg-init-remote.sh.conf
@@ -38,28 +38,33 @@ repoPath=$(echo "${repoBase}/$1" | sed "s/\/$(basename "$1")\$//")
 repoName=$(basename "$1")
 repo="${repoPath}/${repoName}"
 
-echo "scmHost=$scmHost"
-echo "repoBase=$repoBase"
-echo "repoName=$repoName"
-echo "repoPath=$repoPath"
-echo "repo=$repo"
+echo "Resolved config:"
+echo -e "\tscmHost=$scmHost"
+echo -e "\trepoBase=$repoBase"
+echo -e "\trepoName=$repoName"
+echo -e "\trepoPath=$repoPath"
+echo -e "\trepo=$repo\n"
 
-remoteCmd=$(echo "/bin/bash \
-  test -f "${remoteEnvFile}" && . "${remoteEnvFile}" ; \
-  test -d "${repoPath}" \
-  || mkdir -p "${repoPath}" \
-  && { test -d \"${repo}\" || hg init \"${repo}\"; }" \
+remoteCmd=$(echo -e "/bin/bash -c \
+   \"test -r '${remoteEnvFile}' && . '${remoteEnvFile}' ; \
+  test -d '${repo}' && { echo 'WARN: Remote repo: ${repo} already exists!' >&2 ; exit 1; } \
+  || test -d '${repoPath}' \
+  || { mkdir -p '${repoPath}' && hg init '${repo}' ; } \
+  && { test  -d '${repo}' || hg init '${repo}' ; }\" "\
 )
-echo $remoteCmd
+#echo -e "$remoteCmd"
 
 if [ ! -z "$repoName" ]
 then
-  echo "Trying to init ssh://${scmHost}/${repo}"
-  ssh $scmHost "${remoteCmd}"
+  echo "Trying to initialize: ssh://${scmHost}/${repo}"
+  ssh $scmHost "${remoteCmd}" || { test -z "${continueOnError}" && { echo "Errors Occured... Exiting." >&2 ; exit 1; } ; }
 
-  echo "Cloning from: ssh://${scmHost}/${repo}"
-  echo " into: ${repo}"
-  test -d "${repoPath}" || mkdir -p "${repoPath}" && { test -d "${repo}" || hg clone "ssh://${scmHost}/${repo}" "${repo}" ; }
+  test -d "$repo" && { echo "WARN: Local repostiory already exists! $repo" >&2 ; exit 1; } \
+    || echo "Trying clone from: ssh://${scmHost}/${repo}" \
+    && echo "in to: ${repo}"  \
+    && test -d "${repoPath}" || mkdir -p "${repoPath}" \
+    && { test -d "${repo}" || hg clone "ssh://${scmHost}/${repo}" "${repo}" ; }
+
 else
   echo -e "^^ I didn't run! ^^\nUsage: $0 repositoryName"
 fi
